@@ -1,3 +1,7 @@
+
+%********************************************************
+% CHIP 1 DATA FETCHER
+%********************************************************
 Chip1.url = 'https://qdot-nexus.phas.ubc.ca:25683/s/qioaZK3zJJQc44M/download';
 Chip1.download_dir = 'chip1_data/';
 Chip1.polarization = 'TE';
@@ -16,7 +20,7 @@ Chip1.names = { ...
         'PCM_StraightLongWGloss0TE', ... % GC Pair Calibration
     };
 
-% LOAD DATA
+% LOAD CHIP1 DATA
 data_fetcher(Chip1.url, Chip1.download_dir);
 
 for i = 1:length(Chip1.names)
@@ -33,6 +37,42 @@ for i = 1:length(Chip1.names)
         for j = 1:length(channelFields)
             chanName = channelFields{j};
             Chip1.data(i).chan{j} = Chip1.mat(i).testResult.rows.(chanName);
+        end
+    else
+        warning('No .mat file found in folder: %s', rundir);
+    end
+end
+
+%********************************************************
+% CHIP 2 DATA FETCHER
+%********************************************************
+Chip2.url = "https://qdot-nexus.phas.ubc.ca:25683/s/KwY62AbE3b7NMNS/download";
+Chip2.download_dir = 'chip2_data/';
+Chip2.polarization = 'TE';
+Chip2.center_wl = '1310';
+Chip2.temp = '25C';
+Chip2.rundir = fullfile(Chip2.download_dir, 'Chip2b_bottom', 'Sweeps');
+Chip2.names = { ...
+        'LeonelBravo_MZI1', ... % On-chip laser MZI
+    };
+
+% LOAD CHIP1 DATA
+data_fetcher(Chip2.url, Chip2.download_dir);
+
+for i = 1:length(Chip2.names)
+    rundir = fullfile(Chip2.rundir, Chip2.names{i});
+    mat_file = dir(fullfile(rundir, '*.mat'));
+
+    if ~isempty(mat_file)
+        mat_file = fullfile(rundir, mat_file(1).name);
+        Chip2.mat(i) = load(mat_file);
+        Chip2.data(i).wl = Chip2.mat(i).testResult.header.wavelength;
+
+        % Extract all channels dynamically
+        channelFields = fieldnames(Chip2.mat(i).testResult.rows);
+        for j = 1:length(channelFields)
+            chanName = channelFields{j};
+            Chip2.data(i).chan{j} = Chip2.mat(i).testResult.rows.(chanName);
         end
     else
         warning('No .mat file found in folder: %s', rundir);
