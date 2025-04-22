@@ -51,7 +51,8 @@ Chip2.download_dir = 'chip2_data/';
 Chip2.polarization = 'TE';
 Chip2.center_wl = '1310';
 Chip2.temp = '25C';
-Chip2.rundir = fullfile(Chip2.download_dir, 'Chip2b_bottom', 'Sweeps');
+Chip2.rundir = fullfile(Chip2.download_dir, '2025-03-31_On-Chip_and_Off-chip_Laser_Measurement_Data', ...
+                            'Chip2b_bottom', 'Sweeps');
 Chip2.names = { ...
         'LeonelBravo_MZI1', ... % On-chip laser MZI
     };
