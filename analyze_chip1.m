@@ -3,7 +3,7 @@ MZI_dev = 2;
 MZI_cal = 3;
 
 % Simulated vs Measured
-figN=figN+1; figure(figN); clf; hold on;
+figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     device = MZI_dev;
     fig_title = 'Simulated vs Measured Response';
 
@@ -24,7 +24,7 @@ title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Curve fit using the calibration structure
-figN=figN+1; figure(figN); clf; hold on;
+figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     device = MZI_cal; % MZI ∆L=0 Calibration
     fig_title = 'Calibration Structure Optical Spectrum';
 
@@ -67,7 +67,7 @@ title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Subtract curve fitted baseline from MZI data
-figN=figN+1; figure(figN); clf; hold on;
+figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     device = MZI_dev;
     fig_title = 'Baseline Corrected MZI Response';
     
@@ -88,7 +88,7 @@ saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Plot Waveguide Losses Calibration Device
 figN=figN+1;
-figure(figN);
+figure('Position', get(0, 'ScreenSize'));;
 clf;
 hold on;
     fig_title = 'Waveguide Loss Calibration Device';
@@ -113,7 +113,7 @@ hold off;
 
 % Plot Waveguide Loss at 1310nm vs Length
 figN=figN+1;
-figure(figN);
+figure('Position', get(0, 'ScreenSize'));;
 clf;
 hold on;
     fig_title = 'Waveguide Loss at 1310nm vs Length';
@@ -151,7 +151,7 @@ saveas(gcf, sprintf('plots/%s.png', fig_title));
 hold off;
 
 % Curve fitting to MZI transfer function
-figN = figN + 1; figure(figN); clf; hold on;
+figN = figN + 1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     device = MZI_dev;  % MZI device index
     fig_title = 'MZI Curve Fit';
 
@@ -210,7 +210,7 @@ title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Calculate FSR/Group Index vs Wavelength
-figN = figN + 1; figure(figN); clf; hold on;
+figN = figN + 1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     device    = MZI_dev;  
     fig_title = 'FSR and Group Index vs Wavelength';
 
@@ -248,4 +248,3 @@ yyaxis right;
     saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % n_eff and group index plot
-
