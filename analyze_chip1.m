@@ -1,8 +1,10 @@
 sim_out_chan = 2;
+MZI_dev = 2;
+MZI_cal = 3;
 
 % Simulated vs Measured
 figN=figN+1; figure(figN); clf; hold on;
-    device = 2;
+    device = MZI_dev;
     fig_title = 'Simulated vs Measured Response';
 
     wl = Chip1.data(device).wl;
@@ -23,7 +25,7 @@ saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Curve fit using the calibration structure
 figN=figN+1; figure(figN); clf; hold on;
-    device = 3; % MZI ∆L=0 Calibration
+    device = MZI_cal; % MZI ∆L=0 Calibration
     fig_title = 'Calibration Structure Optical Spectrum';
 
     polyfit_order = 3;
@@ -66,7 +68,7 @@ saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Subtract curve fitted baseline from MZI data
 figN=figN+1; figure(figN); clf; hold on;
-    device = 2;
+    device = MZI_dev;
     fig_title = 'Baseline Corrected MZI Response';
     
     wl = Chip1.data(device).wl;
@@ -150,7 +152,7 @@ hold off;
 
 % Curve fitting to MZI transfer function
 figN = figN + 1; figure(figN); clf; hold on;
-    device = 2;  % MZI device index
+    device = MZI_dev;  % MZI device index
     fig_title = 'MZI Curve Fit';
 
     wl = Chip1.data(device).wl;    % raw is in nm
@@ -209,22 +211,22 @@ saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Calculate FSR/Group Index vs Wavelength
 figN = figN + 1; figure(figN); clf; hold on;
-    device    = 2;  
+    device    = MZI_dev;  
     fig_title = 'FSR and Group Index vs Wavelength';
 
     %wl    = linspace(1304, 1316, 100000);
-    wl    = linspace(1285, 1345, 1000000);
+    wl    = linspace(1285, 1345, 100000);
     y_fit = mziModel(xFit, wl);
 
 yyaxis left;
     [pks, pks_idx] = findpeaks(-y_fit);
     FSR = diff(wl(pks_idx));
-    FSR(end+1) = FSR(end);
+    FSR(end+1) = FSR(end); % padding data
 
     p       = polyfit(wl(pks_idx), FSR, 1);
     FSR_fit = polyval(p, wl);
 
-    plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'HandleVisibility','off');
+    %plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'HandleVisibility','off');
     plot(wl,           FSR_fit, 'b-', 'LineWidth', 3, 'DisplayName', 'FSR Fit');
     ylim([.9*min(FSR), 1.1*max(FSR)]);
     ylabel 'FSR (nm)';
@@ -237,7 +239,7 @@ yyaxis right;
     p       = polyfit(wl_m, ng, 1);
     ng_fit  = polyval(p, wl_m);
     
-    plot(wl_m/1e-9, ng, 'ro', 'LineWidth', 3, 'HandleVisibility','off');
+    %plot(wl_m/1e-9, ng, 'ro', 'LineWidth', 3, 'HandleVisibility','off');
     plot(wl_m/1e-9, ng_fit, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index Fit');
 
     ylabel 'Group Index';
@@ -245,5 +247,5 @@ yyaxis right;
     title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
     saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
-
+% n_eff and group index plot
 
