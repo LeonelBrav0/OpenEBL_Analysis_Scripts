@@ -18,7 +18,6 @@ ylabel 'Output Power (dB)'
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25); 
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
-%{
 % Curve fit using the calibration structure
 figN=figN+1; figure(figN); clf; hold on;
     device = 3; % MZI ∆L=0 Calibration
@@ -185,4 +184,3 @@ grid on; grid minor;
 set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title));
 hold off;
-%}
