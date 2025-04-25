@@ -212,7 +212,8 @@ figN = figN + 1; figure(figN); clf; hold on;
     device    = 2;  
     fig_title = 'FSR and Group Index vs Wavelength';
 
-    wl    = linspace(1304, 1316, 100000);
+    %wl    = linspace(1304, 1316, 100000);
+    wl    = linspace(1285, 1345, 1000000);
     y_fit = mziModel(xFit, wl);
 
 yyaxis left;
@@ -223,17 +224,21 @@ yyaxis left;
     p       = polyfit(wl(pks_idx), FSR, 1);
     FSR_fit = polyval(p, wl);
 
-    plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'DisplayName', 'FSR');
+    plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'HandleVisibility','off');
     plot(wl,           FSR_fit, 'b-', 'LineWidth', 3, 'DisplayName', 'FSR Fit');
     ylim([.9*min(FSR), 1.1*max(FSR)]);
     ylabel 'FSR (nm)';
 
 yyaxis right;
-    wl_m       = wl * 1e-9;
-    FSR_fit_m  = FSR_fit * 1e-9;
-    ng         = (wl_m.^2) ./ (MZI_0.dL * FSR_fit_m);
+    wl_m       = wl(pks_idx) * 1e-9;
+    FSR_m  = FSR * 1e-9;
+    ng         = (wl_m.^2) ./ (MZI_0.dL * FSR_m);
 
-    plot(wl_m/1e-9, ng, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index Fit');
+    p       = polyfit(wl_m, ng, 1);
+    ng_fit  = polyval(p, wl_m);
+    
+    plot(wl_m/1e-9, ng, 'ro', 'LineWidth', 3, 'HandleVisibility','off');
+    plot(wl_m/1e-9, ng_fit, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index Fit');
 
     ylabel 'Group Index';
     xlabel 'Wavelength (nm)';
