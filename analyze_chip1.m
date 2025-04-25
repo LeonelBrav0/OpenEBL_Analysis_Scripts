@@ -163,8 +163,8 @@ figN = figN + 1; figure(figN); clf; hold on;
     MZI_0.alpha = 2.493 * 100;  % dB/cm * cm/m
     MZI_0.b     = mean(y);
 
-    % constrain to +/- 10 nm
-    fit_window = 5;  
+    % constrain to +/- 5 nm
+    fit_window = 10;  
     idx = (wl >= MZI_0.wl - fit_window/2) & (wl <= MZI_0.wl + fit_window/2);
     wl = wl(idx);
     y  = y(idx);
@@ -198,11 +198,47 @@ figN = figN + 1; figure(figN); clf; hold on;
     plot( wl, y, 'LineWidth', 3, 'DisplayName','measured' ); 
     plot( wl, y_fit, 'r-', 'LineWidth', 3, 'DisplayName','fit' );
 
+    [pks, pks_idx] = findpeaks(-y_fit);
+    plot( wl(pks_idx), y_fit(pks_idx), 'go', 'LineWidth', 3, 'HandleVisibility','off');
+
 xlim([1309, 1311]);
 xlabel 'Wavelength (nm)'
 ylabel 'Output Power (dB)'
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
-% Calculate 
+% Calculate FSR/Group Index vs Wavelength
+figN = figN + 1; figure(figN); clf; hold on;
+    device    = 2;  
+    fig_title = 'FSR and Group Index vs Wavelength';
+
+    wl    = linspace(1304, 1316, 100000);
+    y_fit = mziModel(xFit, wl);
+
+yyaxis left;
+    [pks, pks_idx] = findpeaks(-y_fit);
+    FSR = diff(wl(pks_idx));
+    FSR(end+1) = FSR(end);
+
+    p       = polyfit(wl(pks_idx), FSR, 1);
+    FSR_fit = polyval(p, wl);
+
+    plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'DisplayName', 'FSR');
+    plot(wl,           FSR_fit, 'b-', 'LineWidth', 3, 'DisplayName', 'FSR Fit');
+    ylim([.9*min(FSR), 1.1*max(FSR)]);
+    ylabel 'FSR (nm)';
+
+yyaxis right;
+    wl_m       = wl * 1e-9;
+    FSR_fit_m  = FSR_fit * 1e-9;
+    ng         = (wl_m.^2) ./ (MZI_0.dL * FSR_fit_m);
+
+    plot(wl_m/1e-9, ng, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index Fit');
+
+    ylabel 'Group Index';
+    xlabel 'Wavelength (nm)';
+    title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
+    saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+
+
 
