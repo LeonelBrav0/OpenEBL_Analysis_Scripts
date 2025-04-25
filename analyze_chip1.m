@@ -1,3 +1,5 @@
+sim_out_chan = 2;
+
 % Simulated vs Measured
 figN=figN+1; figure(figN); clf; hold on;
     device = 2;
@@ -7,7 +9,7 @@ figN=figN+1; figure(figN); clf; hold on;
     y = Chip1.data(device).chan{1};
 
     wl_sim = Chip1_sim.data(device).wl;
-    y_sim = Chip1_sim.data(device).chan{2};
+    y_sim = Chip1_sim.data(device).chan{sim_out_chan};
     
     plot(wl, y, 'DisplayName', 'Measured');
     plot(wl_sim/1e-9, y_sim, 'DisplayName', 'Simulated')
@@ -15,6 +17,7 @@ figN=figN+1; figure(figN); clf; hold on;
 
 xlabel 'Wavelength (nm)'
 ylabel 'Output Power (dB)'
+xlim([1285, 1345])
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25); 
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
@@ -23,61 +26,65 @@ figN=figN+1; figure(figN); clf; hold on;
     device = 3; % MZI ∆L=0 Calibration
     fig_title = 'Calibration Structure Optical Spectrum';
 
-    wl = Chip1.data(device).wl;
     polyfit_order = 3;
+    wl = Chip1.data(device).wl;
+    y = Chip1.data(device).chan{1};
 
-    wl_fit = cell(1,2);
-    base_fit = cell(1,2);
-    idxs = cell(1,2);
+    wl_sim = Chip1_sim.data(device).wl/1e-9;
+    y_sim = Chip1_sim.data(device).chan{sim_out_chan};
 
-    for i=1:2
-        y = Chip1.data(device).chan{i};
-        peak_val = max(y);
-        idx = y >= peak_val - 10;
+    plot(wl, y, 'LineWidth', 3, 'DisplayName', 'Measured');
+    plot(wl_sim, y_sim, 'LineWidth', 3, 'DisplayName', 'Simulated');
 
-        wl_fit{i} = wl(idx);
-        base_fit{i} = y(idx);
-        idxs{i} = idx;
-        
-        plot(wl, y, 'LineWidth', 3);
+    % Measured
+    peak_val = max(y);
+    idx = y >= peak_val - 10;
 
-        p = polyfit(wl_fit{i}, base_fit{i}, polyfit_order);
-        fit_baseline = polyval(p, wl);
-        plot(wl, fit_baseline, 'r-', 'LineWidth', 3, 'HandleVisibility','off');
-    end
+    wl_fit = wl(idx);
+    base_fit = y(idx);
 
+    p = polyfit(wl_fit, base_fit, polyfit_order);
+    gc_baseline_measured = polyval(p, wl);
+    plot(wl, gc_baseline_measured, 'r-', 'LineWidth', 2, 'HandleVisibility','off');
+
+    % Simulated
+    peak_val = max(y_sim);
+    idx = y_sim >= peak_val - 10;
+
+    wl_fit = wl_sim(idx);
+    base_fit = y_sim(idx);
+
+    p = polyfit(wl_fit, base_fit, polyfit_order);
+    gc_baseline_simulated = polyval(p, wl_sim);
+    plot(wl_sim, gc_baseline_simulated, 'r-', 'LineWidth', 2, 'HandleVisibility','off');
+
+xlim([1285, 1345])
 xlabel 'Wavelength (nm)'
 ylabel 'Output Power (dB)'
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25); 
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Subtract curve fitted baseline from MZI data
-figN=figN+1;
-figure(figN);
-clf;
-hold on;
+figN=figN+1; figure(figN); clf; hold on;
     device = 2;
     fig_title = 'Baseline Corrected MZI Response';
     
     wl = Chip1.data(device).wl;
-    y = Chip1.data(device).chan{1};
-    
-    y_corrected = y(idxs{1}) - base_fit{1};
-    wl_corrected = wl(idxs{1});
+    y_corrected = Chip1.data(device).chan{1} - gc_baseline_measured;
 
-    plot(wl_corrected, y_corrected, 'LineWidth', 3);
+    wl_sim = Chip1_sim.data(device).wl/1e-9;
+    y_sim_corrected = Chip1_sim.data(device).chan{sim_out_chan} - gc_baseline_simulated.';
+
+    plot(wl, y_corrected, 'LineWidth', 3, 'DisplayName', 'Measured');
+    plot(wl_sim, y_sim_corrected, 'LineWidth', 3, 'DisplayName', 'Simulated');
         
+xlim([1309, 1311])
 xlabel 'Wavelength (nm)'
 ylabel 'Output Power (dB)'
-title(fig_title);
-xlim([1309, 1311]);
-legend('show');
-grid on; grid minor;
-set(gca, 'FontSize', 25);
-saveas(gcf, sprintf('plots/%s.png', fig_title));
-hold off;
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25); 
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
-% Plot Waveguide Calibration Device
+% Plot Waveguide Losses Calibration Device
 figN=figN+1;
 figure(figN);
 clf;

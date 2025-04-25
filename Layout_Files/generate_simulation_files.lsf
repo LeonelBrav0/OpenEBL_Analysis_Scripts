@@ -1,0 +1,14 @@
+switchtolayout;
+
+setnamed( "ONA_1", "number of points", 20000);
+setnamed( "ONA_1", "start frequency", c/1285e-9);
+setnamed( "ONA_1", "stop frequency", c/1345e-9);
+
+run;
+
+t1 = getresult("ONA_1",'input 1/mode 1/gain');
+t2 = getresult("ONA_1",'input 2/mode 1/gain');
+t3 = getresult("ONA_1",'input 3/mode 1/gain');
+
+cd("C:\Users\mfleo\OneDrive\Desktop\ELEC_413\OpenEBL_Analysis_Scripts\Layout_Files\chip1\sim\initial");
+matlabsave("LeonelBravo_MZI2.mat");
