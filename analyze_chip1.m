@@ -1,8 +1,26 @@
+% Simulated vs Measured
+figN=figN+1; figure(figN); clf; hold on;
+    device = 2;
+    fig_title = 'Simulated vs Measured Response';
+
+    wl = Chip1.data(device).wl;
+    y = Chip1.data(device).chan{1};
+
+    wl_sim = Chip1_sim.data(device).wl;
+    y_sim = Chip1_sim.data(device).chan{2};
+    
+    plot(wl, y, 'DisplayName', 'Measured');
+    plot(wl_sim/1e-9, y_sim, 'DisplayName', 'Simulated')
+    
+
+xlabel 'Wavelength (nm)'
+ylabel 'Output Power (dB)'
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25); 
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+
+%{
 % Curve fit using the calibration structure
-figN=figN+1;
-figure(figN);
-clf;
-hold on;
+figN=figN+1; figure(figN); clf; hold on;
     device = 3; % MZI ∆L=0 Calibration
     fig_title = 'Calibration Structure Optical Spectrum';
 
@@ -31,12 +49,8 @@ hold on;
 
 xlabel 'Wavelength (nm)'
 ylabel 'Output Power (dB)'
-title(fig_title);
-legend('show');
-grid on; grid minor;
-set(gca, 'FontSize', 25);
-saveas(gcf, sprintf('plots/%s.png', fig_title));
-hold off;
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25); 
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Subtract curve fitted baseline from MZI data
 figN=figN+1;
@@ -171,3 +185,4 @@ grid on; grid minor;
 set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title));
 hold off;
+%}
