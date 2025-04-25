@@ -31,10 +31,10 @@ figN=figN+1; figure(figN); clf; hold on;
     y = Chip1.data(device).chan{1};
 
     wl_sim = Chip1_sim.data(device).wl/1e-9;
-    y_sim = Chip1_sim.data(device).chan{sim_out_chan};
+    y_sim = Chip1_sim.data(device).chan{3};
 
-    plot(wl, y, 'LineWidth', 3, 'DisplayName', 'Measured');
-    plot(wl_sim, y_sim, 'LineWidth', 3, 'DisplayName', 'Simulated');
+    plot(wl(1:100:end),    y(1:100:end),    'o', 'LineWidth', 1, 'DisplayName', 'Measured');
+    plot(wl_sim(1:100:end), y_sim(1:100:end), 'o', 'LineWidth', 1, 'DisplayName', 'Simulated');
 
     % Measured
     peak_val = max(y);
@@ -148,46 +148,61 @@ set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title));
 hold off;
 
-% Power Spectral Density
-figN=figN+1;
-figure(figN);
-clf;
-hold on;
-    device = 2;
-    fig_title = 'PSD Open-EBL MZI Response';
+% Curve fitting to MZI transfer function
+figN = figN + 1; figure(figN); clf; hold on;
+    device = 2;  % MZI device index
+    fig_title = 'MZI Curve Fit';
 
-    wl = Chip1.data(device).wl;
-    y  = Chip1.data(device).chan{2};
+    wl = Chip1.data(device).wl;    % raw is in nm
+    y  = Chip1.data(device).chan{1} - gc_baseline_measured;
 
-    c = 3e8;
-    wl_m = wl * 1e-9;
-    f_Hz = c ./ wl_m;
-    f_GHz_unsorted = f_Hz / 1e9;
-    [f_GHz, sortIdx] = sort(f_GHz_unsorted);
+    % Initialize parameters
+    MZI_0.dL    = 2.66659958194e-3; 
+    MZI_0.ng    = 4.497;
+    MZI_0.wl    = 1310;         % now in nm
+    MZI_0.alpha = 2.493 * 100;  % dB/cm * cm/m
+    MZI_0.b     = mean(y);
 
-    P_sorted = y(sortIdx);
-    f_uniform = linspace(f_GHz(1), f_GHz(end), length(f_GHz));
-    P_interp = interp1(f_GHz, P_sorted, f_uniform, 'linear');
-    P_interp = P_interp - mean(P_interp);
+    % constrain to +/- 10 nm
+    fit_window = 5;  
+    idx = (wl >= MZI_0.wl - fit_window/2) & (wl <= MZI_0.wl + fit_window/2);
+    wl = wl(idx);
+    y  = y(idx);
 
-    N = length(P_interp);
-    Y = fft(P_interp);
-    psd2 = (1/(N * mean(diff(f_uniform)))) * abs(Y).^2;
-    psd1 = psd2(1:floor(N/2)+1);
-    psd1(2:end-1) = 2*psd1(2:end-1);
-    psd1(1) = 0;
+    n1    = MZI_0.ng;    
+    n2    =    0;        
+    n3    =    0;        
+    alpha = MZI_0.alpha;
+    b     = MZI_0.b;     
+    x0    = [n1, n2, n3, alpha, b];
 
-    df = f_uniform(2) - f_uniform(1);
-    f_psd = f_uniform(1) + (0:floor(N/2)) * df;
+    mziModel = @(x, wl) 10*log10( ...
+        (1/4) * ...
+        abs( 1 + exp( ...
+             -1i*(2*pi*( x(1) + x(2).*(wl - MZI_0.wl) + x(3).*(wl - MZI_0.wl).^2 ) ...
+                       * MZI_0.dL ./ (wl*1e-9) ) ...
+             - x(4)*MZI_0.dL/2 ...
+        ) ).^2 ...
+    ) + x(5);
 
-    plot(f_psd/1e3, psd1, 'LineWidth', 3);
+    opts = optimoptions('lsqcurvefit', ...
+        'Algorithm','levenberg-marquardt', ...
+        'Display','iter', ...
+        'MaxIterations',2000, ...
+        'MaxFunctionEvaluations',10000, ...
+        'FunctionTolerance',1e-12, ...
+        'StepTolerance',1e-12);
+    [xFit, resnorm] = lsqcurvefit(mziModel, x0, wl, y, [], [], opts);
 
-xlabel 'Optical Frequency (THz)'
-ylabel 'Power Spectral Density'
-%xlim([228.137 228.165]);
-title(fig_title);
-legend('show');
-grid on; grid minor;
-set(gca, 'FontSize', 25);
-saveas(gcf, sprintf('plots/%s.png', fig_title));
-hold off;
+    y_fit = mziModel(xFit, wl);
+    plot( wl, y, 'LineWidth', 3, 'DisplayName','measured' ); 
+    plot( wl, y_fit, 'r-', 'LineWidth', 3, 'DisplayName','fit' );
+
+xlim([1309, 1311]);
+xlabel 'Wavelength (nm)'
+ylabel 'Output Power (dB)'
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+
+% Calculate 
+

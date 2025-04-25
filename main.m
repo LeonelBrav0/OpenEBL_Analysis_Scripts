@@ -6,7 +6,7 @@ figN = 0;
 % Fetch Chip1 and Chip2 data
 fetch_data;
 
-% Fetch Simulation data
+% Fetch INTERCONNECT Simulation data
 load_simulation;
 
 analyze_chip1;
