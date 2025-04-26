@@ -1,5 +1,5 @@
 device = 2;
-chan = 2;
+chan = 1;
 
 % On Chip Laser MZI Response Raw Plot
 figN=figN+1; figure(figN); clf; hold on;
@@ -9,7 +9,7 @@ figN=figN+1; figure(figN); clf; hold on;
     y = Chip2.data(device).chan{chan};
     plot(wl, y, 'LineWidth', 3);
 
-xlabel 'Wavelength (nm)';l
+xlabel 'Wavelength (nm)';
 ylabel 'Output Power (dB)';
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;

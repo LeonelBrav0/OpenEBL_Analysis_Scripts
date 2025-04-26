@@ -53,18 +53,20 @@ Chip2.center_wl = '1310';
 Chip2.temp = '25C';
 Chip2.rundir = fullfile(Chip2.download_dir, '2025-03-31_On-Chip_and_Off-chip_Laser_Measurement_Data', ...
                             'Chip2b_bottom', 'Sweeps');
+
 Chip2.names = { ...
         'LeonelBravo_MZI1', ... % On-chip laser MZI
         'alexim_MZI1'
     };
 
-% LOAD CHIP1 DATA
+% LOAD CHIP2 DATA
 data_fetcher(Chip2.url, Chip2.download_dir);
 
 for i = 1:length(Chip2.names)
     rundir = fullfile(Chip2.rundir, Chip2.names{i});
+    
+    % ONA data
     mat_file = dir(fullfile(rundir, '*.mat'));
-
     if ~isempty(mat_file)
         mat_file = fullfile(rundir, mat_file(1).name);
         Chip2.mat(i) = load(mat_file);
@@ -76,6 +78,15 @@ for i = 1:length(Chip2.names)
             chanName = channelFields{j};
             Chip2.data(i).chan{j} = Chip2.mat(i).testResult.rows.(chanName);
         end
+    else
+        warning('No .mat file found in folder: %s', rundir);
+    end
+    
+    % laser matfiles
+    laser_mat_file = dir(fullfile(rundir, strcat('*', Chip2.names{i}), '*.mat'));
+    if ~isempty(laser_mat_file)
+        laser_mat_file = fullfile(laser_mat_file(1).folder, laser_mat_file(1).name);
+        Chip2.laser_data(i) = load(laser_mat_file);
     else
         warning('No .mat file found in folder: %s', rundir);
     end
