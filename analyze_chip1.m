@@ -3,7 +3,7 @@ MZI_dev = 2;
 MZI_cal = 3;
 
 % Simulated vs Measured
-figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     device = MZI_dev;
     fig_title = 'Simulated vs Measured Response';
 
@@ -16,7 +16,6 @@ figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     plot(wl, y, 'DisplayName', 'Measured');
     plot(wl_sim/1e-9, y_sim, 'DisplayName', 'Simulated')
     
-
 xlabel 'Wavelength (nm)'
 ylabel 'Output Power (dB)'
 xlim([1285, 1345])
@@ -24,7 +23,7 @@ title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Curve fit using the calibration structure
-figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     device = MZI_cal; % MZI ∆L=0 Calibration
     fig_title = 'Calibration Structure Optical Spectrum';
 
@@ -67,7 +66,7 @@ title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Subtract curve fitted baseline from MZI data
-figN=figN+1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     device = MZI_dev;
     fig_title = 'Baseline Corrected MZI Response';
     
@@ -151,7 +150,7 @@ saveas(gcf, sprintf('plots/%s.png', fig_title));
 hold off;
 
 % Curve fitting to MZI transfer function
-figN = figN + 1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     device = MZI_dev;  % MZI device index
     fig_title = 'MZI Curve Fit';
 
@@ -166,17 +165,23 @@ figN = figN + 1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
     MZI_0.b     = mean(y);
 
     % constrain to +/- 5 nm
-    fit_window = 10;  
+    fit_window = 25;  
     idx = (wl >= MZI_0.wl - fit_window/2) & (wl <= MZI_0.wl + fit_window/2);
     wl = wl(idx);
     y  = y(idx);
 
-    n1    = MZI_0.ng;    
-    n2    =    0;        
-    n3    =    0;        
+    n1    =    2.334890209735;    
+    n2    =    -(MZI_0.ng - n1)/MZI_0.wl; 
+    
+    dng   = 0.0014276;
+    n3    = -dng/(2*MZI_0.wl);        
     alpha = MZI_0.alpha;
     b     = MZI_0.b;     
     x0    = [n1, n2, n3, alpha, b];
+
+    % constraints
+    lb = [1,   -Inf, -Inf, MZI_0.alpha    , -Inf];
+    ub = [Inf,  Inf,  Inf, MZI_0.alpha+30 ,  Inf];
 
     mziModel = @(x, wl) 10*log10( ...
         (1/4) * ...
@@ -187,21 +192,15 @@ figN = figN + 1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
         ) ).^2 ...
     ) + x(5);
 
-    opts = optimoptions('lsqcurvefit', ...
-        'Algorithm','levenberg-marquardt', ...
-        'Display','iter', ...
-        'MaxIterations',2000, ...
-        'MaxFunctionEvaluations',10000, ...
-        'FunctionTolerance',1e-12, ...
-        'StepTolerance',1e-12);
-    [xFit, resnorm] = lsqcurvefit(mziModel, x0, wl, y, [], [], opts);
+    [xFit, resnorm] = lsqcurvefit(mziModel, x0, wl, y, lb, ub);
+
+    disp( sprintf( ...
+      '[FIT RESULT] n1: %.6f, n2: %.6f, n3: %.6f, b: %.6f', ...
+      xFit(1), xFit(2), xFit(3), xFit(4)));
 
     y_fit = mziModel(xFit, wl);
     plot( wl, y, 'LineWidth', 3, 'DisplayName','measured' ); 
     plot( wl, y_fit, 'r-', 'LineWidth', 3, 'DisplayName','fit' );
-
-    [pks, pks_idx] = findpeaks(-y_fit);
-    plot( wl(pks_idx), y_fit(pks_idx), 'go', 'LineWidth', 3, 'HandleVisibility','off');
 
 xlim([1309, 1311]);
 xlabel 'Wavelength (nm)'
@@ -209,42 +208,50 @@ ylabel 'Output Power (dB)'
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
-% Calculate FSR/Group Index vs Wavelength
-figN = figN + 1; figure('Position', get(0, 'ScreenSize'));; clf; hold on;
+% Calculate FSR vs Wavelength
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     device    = MZI_dev;  
     fig_title = 'FSR and Group Index vs Wavelength';
 
-    %wl    = linspace(1304, 1316, 100000);
-    wl    = linspace(1285, 1345, 100000);
+    %wl    = linspace(1309.5, 1310.5, 100000);
+    %wl    = linspace(1285, 1345, 100000);
     y_fit = mziModel(xFit, wl);
 
-yyaxis left;
-    [pks, pks_idx] = findpeaks(-y_fit);
+    [pks, pks_idx] = findpeaks(-y);
     FSR = diff(wl(pks_idx));
     FSR(end+1) = FSR(end); % padding data
 
     p       = polyfit(wl(pks_idx), FSR, 1);
     FSR_fit = polyval(p, wl);
 
-    %plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'HandleVisibility','off');
+    plot(wl(pks_idx), FSR,     'bo', 'LineWidth', 2, 'HandleVisibility','off');
     plot(wl,           FSR_fit, 'b-', 'LineWidth', 3, 'DisplayName', 'FSR Fit');
-    ylim([.9*min(FSR), 1.1*max(FSR)]);
-    ylabel 'FSR (nm)';
+%ylim([.9*min(FSR), 1.1*max(FSR)]);
 
-yyaxis right;
-    wl_m       = wl(pks_idx) * 1e-9;
-    FSR_m  = FSR * 1e-9;
-    ng         = (wl_m.^2) ./ (MZI_0.dL * FSR_m);
-
-    p       = polyfit(wl_m, ng, 1);
-    ng_fit  = polyval(p, wl_m);
-    
-    %plot(wl_m/1e-9, ng, 'ro', 'LineWidth', 3, 'HandleVisibility','off');
-    plot(wl_m/1e-9, ng_fit, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index Fit');
-
-    ylabel 'Group Index';
-    xlabel 'Wavelength (nm)';
-    title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
-    saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+ylabel 'FSR (nm)';
+xlabel 'Wavelength (nm)';
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % n_eff and group index plot
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
+    device    = MZI_dev;  
+    fig_title = 'Effective and Group Index vs Wavelength';
+
+
+    xFit(3) = n3;
+    neff = xFit(1) + xFit(2).*(wl - MZI_0.wl) + xFit(3).*(wl - MZI_0.wl).^2;
+    dneff = xFit(2) + 2*xFit(3).*(wl - MZI_0.wl);
+    ng    = neff - wl.*dneff;
+
+yyaxis left;
+    plot(wl, neff, 'b-', 'LineWidth', 3, 'DisplayName', 'Effective Index');
+ylabel 'Effective Index';
+
+yyaxis right;
+    plot(wl, ng, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index');
+ylabel 'Group Index';
+
+xlabel 'Wavelength (nm)';
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
