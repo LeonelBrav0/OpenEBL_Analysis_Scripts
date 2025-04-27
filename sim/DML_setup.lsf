@@ -1,0 +1,60 @@
+# DML 0D model to match the Rate Equation model
+
+switchtolayout;
+deleteall;
+
+addelement('DM Laser');
+ 
+taup = 3e-12; # photon lifetime
+taus = 2e-9;  # carrier lifetime
+
+Nth = 3.73e7;  
+Rsp = 100e9;
+? beta = Rsp*taus/Nth;  # spontaneous emission factor
+
+l = 100e-6;
+t = 1e-6;
+w = 2e-6;
+t_active = 5*6e-9;
+? Va=w * t_active * l;  # active volume
+
+etaQ = 0.9; # quantum efficiency.
+
+t_optical = 1e-6;
+? Gamma = t_active / t_optical;
+? Vo = Va/Gamma; # optical volume
+
+? Ntr = 4e6 / Va;
+
+ng = 3.6;
+vg = c/ng;
+
+G0 = 1e4; # [s^-1]
+? B =G0 * Vo / vg;
+
+alphaH=1e-100; # Henry linewidth enhancement factor
+epsilon=1e-100; # gain compression factor
+
+element_name = "DML_1";	
+setnamed( element_name , "total quantum efficiency", 1 );
+setnamed( element_name , "spontaneous emission factor", beta );
+setnamed( element_name , "carrier lifetime", taus );
+setnamed( element_name , "gain compression factor", epsilon);
+setnamed( element_name , "carrier density at transparency", Ntr );
+setnamed( element_name , "gain coefficient", B );
+setnamed( element_name , "group index", ng );
+setnamed( element_name , "linewidth enhancement factor", alphaH);
+setnamed( element_name , "mode confinement factor", Gamma);
+setnamed( element_name , "photon lifetime", taup);
+setnamed( element_name , "active volume", Va);
+
+addelement('Electrical Constant Multiplier');
+setposition('GAIN_1',-150,16);
+set('gain', etaQ);
+connect('GAIN_1','output','DML_1','modulation');
+
+Ith = (1/vg / Gamma / B / taup + Ntr) / (taus * etaQ) * e * Va;
+Ith_part1 = (1/vg / Gamma / B / taup ) / (taus * etaQ) * e * Va;
+Ith_part2 = ( Ntr) / (taus * etaQ) * e * Va;
+?'Ith = '+num2str(Ith_part1) + ' (to overcome cavity loss) + ' + num2str(Ith_part2) + ' (to get to transparency) = '  +num2str(Ith);
+

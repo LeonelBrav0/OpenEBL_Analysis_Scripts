@@ -1,0 +1,53 @@
+# DML model, LI plot
+
+LI_points = 21;
+LI_max_current = 0.02;
+
+# add the laser, and configure
+DML_setup;
+
+
+# Add DC source and Power meter
+addelement('DC Source');
+setposition('DC_1',-350,0);
+connect('GAIN_1','input','DC_1','output');
+
+addelement('Optical Power Meter');
+set('power unit','W');
+setposition('OPWM_1',200,16);
+connect('OPWM_1','input','DML_1','output');
+
+
+# Create sweep
+
+deletesweep('sweep'); deletesweep('LI');
+addsweep(0);
+setsweep("sweep","name","LI");
+setsweep("LI", "type", "Ranges");
+setsweep("LI", "number of points", LI_points); 
+# define the parameter thickness
+para = struct;
+para.Name = "current";
+para.Parameter = "::Root Element::DC_1::amplitude";
+para.Start = 0;
+para.Stop = LI_max_current;
+# add the parameter thickness to the sweep
+addsweepparameter("LI", para);
+
+
+# define results
+result_1 = struct;
+result_1.Name = "power";
+result_1.Result = "::Root Element::OPWM_1::sum/power";
+# add the results to the sweep
+addsweepresult("LI", result_1);
+
+# run simulation
+runsweep('LI');
+
+# plot results
+r=getsweepresult('LI','power');
+visualize(r);
+
+matlabsave('DML_LI.mat');
+

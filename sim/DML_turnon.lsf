@@ -1,0 +1,66 @@
+# DML model, LI plot
+closeall;
+
+LI_points = 21;
+LI_max_current = 0.02;
+
+# add the laser, and configure
+DML_setup;
+
+
+# Add DC source and Power meter
+addelement('Step Source');
+set('amplitude',5*Ith);
+set('delay',1e-12);
+setposition('STEP_1',-350,0);
+connect('GAIN_1','input','STEP_1','output');
+
+addelement('Optical Oscilloscope');
+setposition('OOSC_1',200,16);
+connect('OOSC_1','input','DML_1','output');
+
+addelement('Optical Spectrum Analyzer');
+setposition('OSA_1',200,100);
+connect('OSA_1','input','DML_1','output');
+
+
+# Run simulation
+run;
+
+# Script to get the data from oscilloscope and plot it:
+?getresult('OSA_1');
+osa=getresult('OSA_1','sum/signal');
+visualize(osa);
+
+# Script to get the data from oscilloscope and plot it:
+?getresult('OOSC_1');
+osc=getresult('OOSC_1','sum/signal');
+visualize(osc);
+#?getattribute(osc);
+pwr=osc.getattribute("power (W) at 193.1e+012 Hz");  # replace with the laser frequency.
+
+plot(osc.time, pwr);
+
+# Script to find the peaks, and determine the resonance frequency:
+# Find the N highest peaks. Returns the index values in the matrix:
+N=15;
+ind = findpeaks(pwr,N);  
+# Plot the peaks, to visually make sure they are correct:
+holdon;
+
+plot ( osc.time(ind), pwr(ind), 'time (s)', 'power (W)', 'Laser power vs. time', 'plot points' );   
+# https://kb.lumerical.com/en/ref_scripts_plot.html
+holdoff;
+
+# Find the time values for the peaks:
+t = osc.time(ind);
+# Get the delta time between each peak:
+dt = t(2:N)-t(1:N-1);
+# Convert to frequency:
+freq = 1 / dt;
+?freq(N-1);
+plot ([1:N-1], freq);
+
+timevec = osc.time;
+
+matlabsave('DML_turnon.mat');

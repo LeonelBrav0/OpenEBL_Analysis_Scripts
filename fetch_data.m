@@ -59,8 +59,15 @@ Chip2.names = { ...
         %'alexim_MZI1'
     };
 
+% Best looking sweep in dataset
+Chip2.OSA.rundir = fullfile(Chip2.download_dir, '2025-03-31_On-Chip_and_Off-chip_Laser_Measurement_Data', ...
+    'Chip2b_bottom', 'OSA', '2025_04_01_17_00_09_OSA_outputdet3_onchip_JiahaoYan_1'); 
+
 % LOAD CHIP2 DATA
 data_fetcher(Chip2.url, Chip2.download_dir);
+
+OSA_mat = dir(fullfile(Chip2.OSA.rundir, '*.mat'));
+Chip2.OSA.data = load(fullfile(Chip2.OSA.rundir, OSA_mat.name));
 
 for i = 1:length(Chip2.names)
     rundir = fullfile(Chip2.rundir, Chip2.names{i});

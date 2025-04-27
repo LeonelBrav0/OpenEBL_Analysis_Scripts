@@ -1,0 +1,27 @@
+# DML model, LI plot
+
+LI_points = 21;
+LI_max_current = 0.02;
+
+# add the laser, and configure
+DML_setup;
+
+
+# Add DC source and Power meter
+addelement('DC Source');
+set('amplitude',Ith*4);
+setposition('DC_1',-350,0);
+connect('GAIN_1','input','DC_1','output');
+
+addelement('Optical Spectrum Analyzer');
+setposition('OSA_1',200,100);
+connect('OSA_1','input','DML_1','output');
+
+
+# Run simulation
+run;
+
+# Script to get the data from oscilloscope and plot it:
+?getresult('OSA_1');
+osa=getresult('OSA_1','sum/signal');
+visualize(osa);
