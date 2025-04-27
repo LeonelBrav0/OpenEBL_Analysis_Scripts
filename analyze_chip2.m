@@ -2,7 +2,7 @@ device = 2;
 chan = 1;
 
 % On Chip Laser MZI Response Raw Plot
-figN=figN+1; figure(figN); clf; hold on;
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     fig_title = 'On-chip Laser MZI Response';
 
     wl = Chip2.data(device).wl;
@@ -15,7 +15,7 @@ title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
 
 % Power Spectral Density
-figN=figN+1; figure(figN); clf; hold on;
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
     fig_title = 'PSD On-chip Laser MZI Response';
 
     wl = Chip2.data(device).wl;
