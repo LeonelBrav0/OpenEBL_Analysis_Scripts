@@ -11,6 +11,6 @@ load_simulation;
 
 analyze_chip1;
 
-analyze_laser;
+%analyze_laser;
 
 %analyze_chip2;

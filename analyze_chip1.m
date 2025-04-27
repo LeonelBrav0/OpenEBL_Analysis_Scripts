@@ -170,10 +170,10 @@ figure('Position', get(0, 'ScreenSize')); clf; hold on;
     wl = wl(idx);
     y  = y(idx);
 
-    n1    =    2.334890209735;    
-    n2    =    -(MZI_0.ng - n1)/MZI_0.wl; 
+    n1    =    2.43669;    
+    n2    =    -1.58277099237e-3; %-(MZI_0.ng - n1)/MZI_0.wl; 
     
-    dng   = 0.0014276;
+    dng   = 1.95046439629e-4;
     n3    = -dng/(2*MZI_0.wl);        
     alpha = MZI_0.alpha;
     b     = MZI_0.b;     
@@ -244,14 +244,48 @@ figure('Position', get(0, 'ScreenSize')); clf; hold on;
     dneff = xFit(2) + 2*xFit(3).*(wl - MZI_0.wl);
     ng    = neff - wl.*dneff;
 
+    % Load simulated results
+    chip1_mode = readmatrix('sim\chip1_wg_mode_sim.txt');
+    
+    c = 3e8; 
+    f = chip1_mode(:,1);         
+    neff_real = chip1_mode(:,2); 
+    ng_real = c./chip1_mode(:,8);
+    lambda = c ./ f;         
+    lambda_nm = lambda * 1e9;
+    p = polyfit(lambda_nm, neff_real, 1);
+    neff_fit = polyval(p, wl);
+    p_ng = polyfit(lambda_nm, ng_real, 1);
+    ng_fit = polyval(p_ng, wl);
+
 yyaxis left;
-    plot(wl, neff, 'b-', 'LineWidth', 3, 'DisplayName', 'Effective Index');
+    plot(wl, neff, 'b-', 'LineWidth', 3, 'DisplayName', 'Measured Effective Index Fit');
+    plot(wl, neff_fit, 'b--', 'LineWidth', 3, 'DisplayName', 'Simulated Effective Index');
 ylabel 'Effective Index';
 
 yyaxis right;
-    plot(wl, ng, 'r-', 'LineWidth', 3, 'DisplayName', 'Group Index');
+    plot(wl, ng, 'r-', 'LineWidth', 3, 'DisplayName', 'Measured Group Index Fit');
+    plot(wl, ng_fit, 'r--', 'LineWidth', 3, 'DisplayName', 'Simulated Group Index');
 ylabel 'Group Index';
 
 xlabel 'Wavelength (nm)';
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+
+% just the simulated plot
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
+    device    = MZI_dev;  
+    fig_title = 'Simulated Effective and Group Index vs Wavelength';
+
+yyaxis left;
+    plot(wl, neff_fit, 'b-', 'LineWidth', 3, 'DisplayName', 'Simulated Effective Index');
+ylabel 'Effective Index';
+
+yyaxis right;
+    plot(wl, ng_fit, 'r-', 'LineWidth', 3, 'DisplayName', 'Simulated Group Index');
+ylabel 'Group Index';
+
+xlabel 'Wavelength (nm)';
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+    
