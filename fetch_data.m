@@ -18,6 +18,11 @@ Chip1.names = { ...
         'PCM_StraightLongWGloss20504TE' , ... % Straight Waveguide Loss Calibration
         'PCM_StraightLongWGloss10304TE' , ... % Straight Waveguide Loss Calibration
         'PCM_StraightLongWGloss0TE', ... % GC Pair Calibration
+        'PCM_SpiralWG40304TE', ... % Spiral Waveguide Loss Calibration
+        'PCM_SpiralWG5042TE', ...  % Spiral Waveguide Loss Calibration
+        'PCM_SpiralWG0TE', ...   % Spiral Waveguide Loss Calibration
+        'PCM_SpiralWG10338TE' ...  % Spiral Waveguide Loss Calibration
+        'PCM_SpiralWG20051TE', ... % Spiral Waveguide Loss Calibration
     };
 
 % LOAD CHIP1 DATA

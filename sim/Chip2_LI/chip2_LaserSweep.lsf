@@ -1,0 +1,95 @@
+switchtolayout;
+
+Ith_target = 0.013;
+
+taup = 3e-12; # photon lifetime
+taus = 2e-9;  # carrier lifetime
+
+Nth = 3.73e7;  
+Rsp = 100e9;
+? beta = Rsp*taus/Nth;  # spontaneous emission factor
+
+l = 100e-6;
+t = 1e-6;
+w = 2e-6;
+t_active = 5*6e-9;
+? Va=w * t_active * l;  # active volume
+
+
+etaQ = 0.5; # quantum efficiency.
+
+t_optical = 1e-6;
+? Gamma = t_active / t_optical;
+? Vo = Va/Gamma; # optical volume
+
+? Ntr = 4e6 / Va;
+
+ng = 3.6;
+vg = c/ng;
+
+G0 = 2346.57; # [s^-1]
+? B =G0 * Vo / vg;
+
+Va_required = ( (Ith_target * taus * etaQ) / e - (1 / (G0 * taup)) ) / Ntr;
+G0_required = 1 / ( ( (Ith_target * taus * etaQ) / (e * Va) - Ntr ) * Gamma * Vo * taup );
+Ntr_required = (Ith_target * taus * etaQ) / (e * Va) - (1 / (vg * Gamma * B * taup));
+?tmp = 'Ntr Required: ' + num2str(Ntr_required);
+?tmp = 'G0 Required: ' + num2str(G0_required);
+?tmp = 'Va Required: ' + num2str(Va_required);
+
+alphaH=1e-100; # Henry linewidth enhancement factor
+epsilon=1e-100; # gain compression factor
+
+element_name = "DML_1";	
+setnamed( element_name , "total quantum efficiency", 1 );
+setnamed( element_name , "spontaneous emission factor", beta );
+setnamed( element_name , "carrier lifetime", taus );
+setnamed( element_name , "gain compression factor", epsilon);
+setnamed( element_name , "carrier density at transparency", Ntr );
+setnamed( element_name , "gain coefficient", B );
+setnamed( element_name , "group index", ng );
+setnamed( element_name , "linewidth enhancement factor", alphaH);
+setnamed( element_name , "mode confinement factor", Gamma);
+setnamed( element_name , "photon lifetime", taup);
+setnamed( element_name , "active volume", Va);
+
+element_name = "GAIN_1";	
+setnamed(element_name , 'gain', etaQ);
+
+Ith = (1/vg / Gamma / B / taup + Ntr) / (taus * etaQ) * e * Va;
+Ith_part1 = (1/vg / Gamma / B / taup ) / (taus * etaQ) * e * Va;
+Ith_part2 = ( Ntr) / (taus * etaQ) * e * Va;
+?'Ith = '+num2str(Ith_part1) + ' (to overcome cavity loss) + ' + num2str(Ith_part2) + ' (to get to transparency) = '  +num2str(Ith);
+
+
+LI_points = 21;
+LI_max_current = 0.04;
+
+deletesweep('sweep'); deletesweep('LI');
+addsweep(0);
+setsweep("sweep","name","LI");
+setsweep("LI", "type", "Ranges");
+setsweep("LI", "number of points", LI_points); 
+# define the parameter thickness
+para = struct;
+para.Name = "current";
+para.Parameter = "::Root Element::DC_1::amplitude";
+para.Start = 0;
+para.Stop = LI_max_current;
+# add the parameter thickness to the sweep
+addsweepparameter("LI", para);
+
+
+# define results
+result_1 = struct;
+result_1.Name = "power";
+result_1.Result = "::Root Element::OPWM_1::sum/power";
+# add the results to the sweep
+addsweepresult("LI", result_1);
+
+# run simulation
+runsweep('LI');
+
+# plot results
+r=getsweepresult('LI','power');
+visualize(r);

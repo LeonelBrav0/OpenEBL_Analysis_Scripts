@@ -78,3 +78,27 @@ figure('Position', get(0, 'ScreenSize')); clf; hold on;
     ylabel 'Lasing Wavelength (nm)'
 title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
 saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
+
+
+% Simulated LI curve
+figure('Position', get(0, 'ScreenSize')); clf; hold on;
+    fig_title = 'Simulated On-chip Laser LI Curve';
+    
+    LI_sim = readmatrix('sim/Chip2_LI/LI_sweep.txt');
+    I_sim_mA = LI_sim(:,1)/1e-3;
+
+    plot(I_sim_mA, LI_sim(:,2)/(1e-3), 'LineWidth', 5, 'DisplayName', 'Output Power');
+
+
+    xline(13, '--r', 'I_{th} = 13 mA', ...
+        'FontSize', 50, ...
+        'LabelOrientation', 'horizontal', ...
+        'LineWidth', 5 ...
+        'LabelVerticalAlignment', 'middle', ...
+        'LabelHorizontalAlignment', 'center');
+    
+
+xlabel 'Current (mA)'
+ylabel 'Power (mW)'
+title(fig_title); legend('show'); grid on; grid minor; set(gca, 'FontSize', 25);
+saveas(gcf, sprintf('plots/%s.png', fig_title)); hold off;
